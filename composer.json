@@ -1,0 +1,97 @@
+{
+    "name": "drupal-composer/drupal-project",
+    "description": "Project template for Drupal 8 projects with composer",
+    "type": "project",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "",
+            "role": ""
+        }
+    ],
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://packages.drupal.org/8"
+        }
+    ],
+    "require": {
+        "php": ">=7.0.8",
+        "composer/installers": "^1.2",
+        "cweagans/composer-patches": "^1.6.5",
+        "drupal/bulk_user_registration": "^1.1",
+        "drupal/console": "~1.0",
+        "drupal/core": "^8.8.0",
+        "drupal/core-composer-scaffold": "^8.8.0",
+        "drupal/custom_sql_migrate_source_plugin": "^1.0",
+        "drupal/devel": "^2.1",
+        "drupal/devel_mail_logger": "^1.0",
+        "drupal/group": "1.x-dev",
+        "drupal/group_extras": "^1.0",
+        "drupal/json_field": "^1.0",
+        "drupal/mailgun": "^1.0",
+        "drupal/multiple_registration": "^2.89",
+        "drupal/multivaluefield": "^1.0",
+        "drupal/physical": "^1.0",
+        "drupal/rest_password": "^1.5",
+        "drupal/rest_views": "1.x-dev",
+        "drupal/restui": "^1.17",
+        "drupal/rules": "3.x-dev",
+        "drupal/translation_views": "^1.0",
+        "drush/drush": "^9.7.1 | ^10.0.0",
+        "rackspace/php-opencloud": "^1.16",
+        "vlucas/phpdotenv": "^4.0",
+        "webflo/drupal-finder": "^1.0.0",
+        "zaporylie/composer-drupal-optimizations": "^1.0"
+    },
+    "require-dev": {
+        "drupal/core-dev": "^8.8.0"
+    },
+    "conflict": {
+        "drupal/drupal": "*"
+    },
+    "minimum-stability": "dev",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true
+    },
+    "autoload": {
+        "classmap": [
+            "scripts/composer/ScriptHandler.php"
+        ],
+        "files": ["load.environment.php"]
+    },
+    "scripts": {
+        "pre-install-cmd": [
+            "DrupalProject\\composer\\ScriptHandler::checkComposerVersion"
+        ],
+        "pre-update-cmd": [
+            "DrupalProject\\composer\\ScriptHandler::checkComposerVersion"
+        ],
+        "post-install-cmd": [
+            "DrupalProject\\composer\\ScriptHandler::createRequiredFiles"
+        ],
+        "post-update-cmd": [
+            "DrupalProject\\composer\\ScriptHandler::createRequiredFiles"
+        ]
+    },
+    "extra": {
+        "composer-exit-on-patch-failure": true,
+        "patchLevel": {
+            "drupal/core": "-p2"
+        },
+        "drupal-scaffold": {
+            "locations": {
+                "web-root": "web/"
+            }
+        },
+        "installer-paths": {
+            "web/core": ["type:drupal-core"],
+            "web/libraries/{$name}": ["type:drupal-library"],
+            "web/modules/contrib/{$name}": ["type:drupal-module"],
+            "web/profiles/contrib/{$name}": ["type:drupal-profile"],
+            "web/themes/contrib/{$name}": ["type:drupal-theme"],
+            "drush/Commands/contrib/{$name}": ["type:drupal-drush"]
+        }
+    }
+}

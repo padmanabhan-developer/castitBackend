@@ -1,0 +1,24 @@
+<?php
+
+/**
+ * @file
+ * Contains castit_user_import.module.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function castit_user_import_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    // Main module help for the castit_user_import module.
+    case 'help.page.castit_user_import':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('Imports user profile data of models') . '</p>';
+      return $output;
+
+    default:
+  }
+}

@@ -1,0 +1,5 @@
+name: 'Castit User Import'
+type: module
+description: 'Imports user profile data of models'
+core: 8.x
+package: 'Custom Modules'

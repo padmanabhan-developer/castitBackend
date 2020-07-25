@@ -1,0 +1,7 @@
+name: Castit API
+type: module
+description: Custom RESTful API module with GET/POST/PUT/DELETE etc.. method examples.
+author: Padmanabhan
+core: 8.x
+package: Custom Modules
+project: 'castitapis'

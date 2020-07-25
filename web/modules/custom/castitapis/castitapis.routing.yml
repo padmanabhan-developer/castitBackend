@@ -1,0 +1,139 @@
+# Castit API endpoints
+
+castit.complete_registration:
+  path: 'api/complete-registration'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::complete_registration' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+castit.create_lightbox:
+  path: 'api/create-lightbox'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::create_lightbox' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+castit.delete_lightbox:
+  path: 'api/delete-lightbox/{gid}'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::delete_lightbox' }
+  methods:  [DELETE]
+  requirements:
+    _access: 'TRUE'
+
+castit.rackspace_temp_files_access:
+  path: 'api/get-temp-access'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::get_files_access' }
+  methods:  [GET]
+  requirements:
+    _access: 'TRUE'
+
+castit.trigger_zencoder:
+  path: 'api/trigger-zencoder'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::trigger_zencoder' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+castit.user_update:
+  path: 'api/user-update'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::user_update' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+castit.share_lightbox:
+  path: 'api/share-lightbox'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::share_lightbox' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+castit.addmember_lightbox:
+  path: 'api/lightbox/addmember'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::addmember_lightbox' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+castit.check_email_exists:
+  path: 'api/email/check'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::check_email_exists' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+castit.removemember_lightbox:
+  path: 'api/lightbox/removemember'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::removemember_lightbox' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.reset_password:
+  path: 'api/reset-password'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::reset_password' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.update_password:
+  path: 'api/update-password'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::update_password' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.set_user_status:
+  path: 'api/set-status'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::set_user_status' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.set_media_status:
+  path: 'api/set-media-status'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::set_media_status' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.set_profile_new_status:
+  path: 'api/set-profile-new-status'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::set_profile_new_status' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+
+
+# test_api.get:
+#   path: 'my-api/get'
+#   defaults: { _controller: '\Drupal\test_api\Controller\CastitRestAPIController::get_example' }
+#   methods:  [GET]
+#   requirements:
+#     _access: 'TRUE'
+
+# test_api.put:
+#   path: 'my-api/put.json'
+#   defaults: { _controller: '\Drupal\test_api\Controller\CastitRestAPIController::put_example' }
+#   methods:  [PUT]
+#   requirements:
+#     _access: 'TRUE'
+
+# test_api.post:
+#   path: 'my-api/post.json'
+#   defaults: { _controller: '\Drupal\test_api\Controller\CastitRestAPIController::post_example' }
+#   methods:  [POST]
+#   requirements:
+#     _access: 'TRUE'
+
+
+# complete_reqgistration.customer:
+#   path: 'api/customer'
+#   defaults: { _controller: '\Drupal\test_api\Controller\CastitRestAPIController::customer' }
+#   methods:  [POST]
+#   requirements:
+#     _access: 'TRUE'
+
+
+# test_api.delete:
+#   path: 'my-api/delete.json'
+#   defaults: { _controller: '\Drupal\test_api\Controller\CastitRestAPIController::delete_example' }
+#   methods:  [DELETE]
+#   requirements:
+#     _access: 'TRUE'

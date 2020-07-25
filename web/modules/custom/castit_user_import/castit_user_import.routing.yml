@@ -1,0 +1,8 @@
+
+castit_user_import.default_controller_import:
+  path: '/castit_user_import/import/{endIndex}'
+  defaults:
+    _controller: '\Drupal\castit_user_import\Controller\DefaultController::import'
+    _title: 'default'
+  requirements:
+    _permission: 'access content'
