@@ -16,8 +16,8 @@ class DefaultController extends ControllerBase {
    *   Return Hello string.
    */
   public function import($endIndex) {
-    include 'ModelsDataOld.php';
-    echo count($models);
+    include 'ModelsData.php';
+    // echo count($models);
     foreach($models as $main_key => $model){
       // if($main_key > 0 && $main_key <= 500){
       // if($main_key > 500 && $main_key <= 1000){
@@ -28,7 +28,7 @@ class DefaultController extends ControllerBase {
       // if($main_key > 3000 && $main_key <= 3500){
       // if($main_key > 3500 && $main_key <= 4000){
       // if($main_key > 4000 && $main_key <= 4500){
-      
+
         switch ($endIndex) {
           case '1':
             if($main_key >= 0 && $main_key <= 1){$this->user_create($model);}
@@ -61,6 +61,9 @@ class DefaultController extends ControllerBase {
           case '4500':
             if($main_key > 4000 && $main_key <= 4500){$this->user_create($model);}
           break;
+          case '5000':
+            if($main_key > 4500 && $main_key <= 5000){$this->user_create($model);}
+          break;
 
           // default:
             // # code...
@@ -68,7 +71,7 @@ class DefaultController extends ControllerBase {
         }
         continue;
     }
-  
+
     // echo '<pre>';
     // echo '**';
     // print_r(User::load(565));
@@ -80,7 +83,6 @@ class DefaultController extends ControllerBase {
   }
 
   public function user_create($model) {
-
     unset($user);
     foreach($model['payments'] as $pay_key => $pay){
       $payment_import_array[]['index'] = '';
@@ -92,8 +94,8 @@ class DefaultController extends ControllerBase {
       }
     $user = entity_create('user', [
       'name' => $model['email'],
-      // 'pass' => $model['pass'],
-      'pass' => 'pass@123',
+      'pass' => $model['pass'],
+      // 'pass' => 'pass@123',
       'mail' => $model['email'],
       'field_about_me' => $model['notes'],
       'field_agreed_to_terms' => isset($model['agreed_to_these_terms'])? $model['agreed_to_these_terms'] : 0,
@@ -164,11 +166,22 @@ class DefaultController extends ControllerBase {
     $user->addRole('model');
     $user->activate();
     $user->save();
-    $gender = ($model['gender_id'] == 1) ? 'M' : 'F';
-    $profileNumber = $model['profile_type'] . $gender . str_pad($user->id(), 4, "0", STR_PAD_LEFT);
-    $user->set('field_profile_number', $profileNumber);
-    $user->save();
+    // $gender = ($model['gender_id'] == 1) ? 'M' : 'F';
+    // $profileNumber = $model['profile_type'] . $gender . str_pad($user->id(), 4, "0", STR_PAD_LEFT);
+    // $user->set('field_profile_number', $profileNumber);
+    // $user->save();
     return 'true';
   }
 
+  public function updateoldprofiles() {
+
+  }
+  public function update_password() {
+    include 'old-passwords.php';
+    foreach($passwords as $profile) {
+      $user = User::load($profile['uid']);
+      $user->setPassword($profile['password']);
+      $user->save();
+    }
+  }
 }

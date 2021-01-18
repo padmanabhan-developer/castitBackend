@@ -4,3 +4,16 @@
  * @file
  * Test API module.
  */
+
+function pp($str){
+  echo '<pre>';
+  print_r($str);
+  echo '</pre>';
+}
+
+function ppe($str){
+  echo '<pre>';
+  print_r($str);
+  echo '</pre>';
+  exit;
+}

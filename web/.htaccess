@@ -186,4 +186,9 @@ AddEncoding gzip svgz
   Header always set X-Content-Type-Options nosniff
   # Disable Proxy header, since it's an attack vector.
   RequestHeader unset Proxy
+  # allow requests from all domain
+  Header set Access-Control-Allow-Origin "*"
 </IfModule>
+
+php_value memory_limit 1000M
+php_value max_execution_time 900

@@ -99,7 +99,48 @@ castit.set_profile_new_status:
   methods:  [POST]
   requirements:
     _access: 'TRUE'
-
+castit.set_profile_type:
+  path: 'api/set-profile-type'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::set_profile_type' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.enquire_workshop:
+  path: 'api/enquire-workshop'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::enquire_workshop' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.send_activation_email:
+  path: 'api/send-activation-email'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::send_activation_email' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.send_deactivation_email:
+  path: 'api/send-deactivation-email'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::send_deactivation_email' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.update_media_delta:
+  path: 'api/update-media-delta'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::update_media_delta' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
+castit.get_payment_info:
+  path: 'api/get-payment-info'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::get_payment_info' }
+  methods:  [GET]
+  requirements:
+    _access: 'TRUE'
+castit.set_payment_info:
+  path: 'api/set-payment-info'
+  defaults: { _controller: '\Drupal\castitapis\Controller\CastitRestAPIController::set_payment_info' }
+  methods:  [POST]
+  requirements:
+    _access: 'TRUE'
 
 # test_api.get:
 #   path: 'my-api/get'

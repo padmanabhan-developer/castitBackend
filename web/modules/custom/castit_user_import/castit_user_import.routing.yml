@@ -6,3 +6,19 @@ castit_user_import.default_controller_import:
     _title: 'default'
   requirements:
     _permission: 'access content'
+
+castit_user_import.update_password_pn_media:
+  path: '/castit_user_import/updateoldprofiles'
+  defaults:
+    _controller: '\Drupal\castit_user_import\Controller\DefaultController::updateoldprofiles'
+    _title: 'default'
+  requirements:
+    _permission: 'access content'
+
+castit_user_import.update_password:
+  path: '/castit_user_import/update-password'
+  defaults:
+    _controller: '\Drupal\castit_user_import\Controller\DefaultController::update_password'
+    _title: 'default'
+  requirements:
+    _permission: 'access content'

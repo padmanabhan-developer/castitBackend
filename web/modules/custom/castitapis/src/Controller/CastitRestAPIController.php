@@ -22,6 +22,47 @@ use Mailgun\Mailgun;
  * Controller routines for castitapis routes.
  */
 class CastitRestAPIController extends ControllerBase {
+  private $hair_colors_DK = [
+    1 => 'Blondt',
+    2 => 'Mørke blondt',
+    3 => 'Brunt',
+    4 => 'Sort',
+    5 => 'Rødt',
+    6 => 'Gråt',
+    7 => 'Skaldet',
+    8 => 'Hvidt'
+  ];
+
+  private $hair_colors_EN = [
+    1 => 'Blonde',
+    2 => 'Dark Blonde',
+    3 => 'Brown',
+    4 => 'Black',
+    5 => 'Red',
+    6 => 'Grey',
+    7 => 'Bald',
+    8 => 'White'
+  ];
+
+  private $eye_colors_DK = [
+    1 => 'Brune',
+    2 => 'Blå',
+    3 => 'Grønne',
+    4 => 'Blågrønne',
+    5 => 'Blågrå',
+    6 => 'Grå',
+    7 => 'Hazel'
+  ];
+
+  private $eye_colors_EN = [
+    1 => 'Brown',
+    2 => 'Blue',
+    3 => 'Green',
+    4 => 'Blue Green',
+    5 => 'Blue Grey',
+    6 => 'Grey',
+    7 => 'Hazel'
+  ];
 
   /**
    * Callback for `my-api/get.json` API method.
@@ -50,7 +91,7 @@ class CastitRestAPIController extends ControllerBase {
    */
   public function post_example( Request $request ) {
 
-    // This condition checks the `Content-type` and makes sure to 
+    // This condition checks the `Content-type` and makes sure to
     // decode JSON string from the request body into array.
     if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
       $data = json_decode( $request->getContent(), TRUE );
@@ -65,7 +106,7 @@ class CastitRestAPIController extends ControllerBase {
 
   public function model( Request $request ) {
 
-    // This condition checks the `Content-type` and makes sure to 
+    // This condition checks the `Content-type` and makes sure to
     // decode JSON string from the request body into array.
     if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
       $data = json_decode( $request->getContent(), TRUE );
@@ -77,11 +118,48 @@ class CastitRestAPIController extends ControllerBase {
 
     return new JsonResponse( $response );
   }
+
+  public function get_payment_info( Request $request ) {
+
+    // This condition checks the `Content-type` and makes sure to
+    // decode JSON string from the request body into array.
+    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+      $data = json_decode( $request->getContent(), TRUE );
+
+      if ($data['uid']) {
+        $user = User::load($data['uid']);
+        $payment_info = $user->field_payments->getValue();
+        ppe($payment_info);
+      }
+    }
+
+    $response['data'] = 'Some test data to return';
+    $response['method'] = 'GET';
+
+    return new JsonResponse( $response );
+  }
+
+  public function set_payment_info( Request $request ) {
+
+    // This condition checks the `Content-type` and makes sure to
+    // decode JSON string from the request body into array.
+    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+      $data = json_decode( $request->getContent(), TRUE );
+      ppe($data);
+      $request->request->replace( is_array( $data ) ? $data : [] );
+    }
+
+    $response['data'] = 'Some test data to return';
+    $response['method'] = 'POST';
+
+    return new JsonResponse( $response );
+  }
+
   public function get_files_access(Request $request){
     if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
       $filename = json_decode( $request->query->get('filename'), TRUE );
       $request->request->replace( is_array( $data ) ? $data : [] );
-    
+
       $username = 'castit';
       $apikey = '187a515209d0affd473fedaedd6d770b';
       $containerName = 'CASTITFILES';
@@ -104,10 +182,10 @@ class CastitRestAPIController extends ControllerBase {
 
       $object = $container->getObject("");
       $object->setName($filename);
-      
+
       $account = $service->getAccount();
       $account->setTempUrlSecret();
-      
+
       $tempUrl = $object->getTemporaryUrl(1800, 'PUT', TRUE);
 
       $response['tempUrl'] = $tempUrl;
@@ -162,6 +240,71 @@ class CastitRestAPIController extends ControllerBase {
     return new JsonResponse( $response );
   }
 
+  public function update_media_delta( Request $request ) {
+    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+      $data = json_decode( $request->getContent(), TRUE );
+      $user = User::load($data['userData']['uid_export']);
+      if($user){
+        // PHOTOS ordering
+        $existing_photos_data = $user->field_photos->getValue();
+        $incoming_photos_data = $data['userData']['field_photos_export'];
+        if(count($existing_photos_data) > 0 && count($incoming_photos_data) > 0){
+          $new_photos_data = [];
+          foreach($existing_photos_data as $existing_key => $existing_obj) {
+            $new_key = array_search ($existing_obj['uri'], $incoming_photos_data);
+            $new_photos_data[$new_key] = [
+              'uri' => $existing_obj['uri'],
+              'title' => $existing_obj['title'],
+              'options' => $existing_obj['options']
+            ];
+          }
+          ksort($new_photos_data);
+          $user->set('field_photos', $new_photos_data);
+          $user->save();
+        }
+        // VIDEOS ordering
+        $existing_videos_data = $user->field_videos->getValue();
+        $incoming_videos_data = $data['userData']['field_videos_export'];
+        if(count($existing_videos_data) > 0 && count($incoming_videos_data) > 0){
+          $new_videos_data = [];
+          foreach($existing_videos_data as $existing_key => $existing_obj) {
+            $new_key = array_search ($existing_obj['uri'], $incoming_videos_data);
+            $new_videos_data[$new_key] = [
+              'uri' => $existing_obj['uri'],
+              'title' => $existing_obj['title'],
+              'options' => $existing_obj['options']
+            ];
+          }
+          ksort($new_videos_data);
+          $user->set('field_videos', $new_videos_data);
+          $user->save();
+        }
+        // VIDEOS THUMBNAILS ordering
+        $existing_videos_data = $user->field_video_thumbnails->getValue();
+        $incoming_videos_data = $data['userData']['field_video_thumbnails_export'];
+        if(count($existing_videos_data) > 0 && count($incoming_videos_data) > 0){
+          $new_videos_data = [];
+          foreach($existing_videos_data as $existing_key => $existing_obj) {
+            $new_key = array_search ($existing_obj['uri'], $incoming_videos_data);
+            $new_videos_data[$new_key] = [
+              'uri' => $existing_obj['uri'],
+              'title' => $existing_obj['title'],
+              'options' => $existing_obj['options']
+            ];
+          }
+          ksort($new_videos_data);
+          $user->set('field_video_thumbnails', $new_videos_data);
+          $user->save();
+        }
+      }
+      $response['message'] = 'success';
+    }
+    else{
+      $response['message'] = 'supply json';
+    }
+    return new JsonResponse( $response );
+  }
+
   public function addcomment_lightbox(  ) {
 
   }
@@ -193,6 +336,7 @@ class CastitRestAPIController extends ControllerBase {
       $user = user_load_by_mail($data['name']);
       if($user) {
         $to = $data['name'];
+        $content = '';
         // $to = 'padmanabhann1@mailinator.com';
 				$subject = "Castit adgangskode";
         $time = time();
@@ -208,12 +352,12 @@ class CastitRestAPIController extends ControllerBase {
         <body style="background:#fff; font-family:Calibri;">
         <div style="background:#fff;width:100%;float:left;">
         <div style="width:100%; margin:auto; text-align:center;">
-        <div style="display:inline-block; background:#fff; border:solid 3px #313743; 	
-        width:580px;-webkit-border-radius: 8px;-moz-border-radius: 8px;border-radius: 8px; 	
+        <div style="display:inline-block; background:#fff; border:solid 3px #313743;
+        width:580px;-webkit-border-radius: 8px;-moz-border-radius: 8px;border-radius: 8px;
         padding:0 0 13px; margin:18px 0 50px 0;">
-        <div style="color: #20be93;font-size: 23px;font-family: Calibri; 
-        background:#cccccc;float:left; width:100%; text-align:center; margin:0 0 16px 0; 
-        padding:8px 0 4px;"><img src="https://castit.dk/images/logo.png" 
+        <div style="color: #20be93;font-size: 23px;font-family: Calibri;
+        background:#cccccc;float:left; width:100%; text-align:center; margin:0 0 16px 0;
+        padding:8px 0 4px;"><img src="https://castit.dk/images/logo.png"
         width="90px"/> </div>
         <div style="padding:0 30px;">';
         if($user->hasRole('customer')){
@@ -224,26 +368,29 @@ class CastitRestAPIController extends ControllerBase {
         $content_sal_en = '<h5 style="color: #646e78;font-size: 16px;padding:0;margin: 0; text-align:left;">Dear '.ucfirst($first_name[0]['value']).' '.ucfirst($last_name[0]['value']).',</h5>';
         }
 
-        $reset_link_dk = '<a href="https://test.castit.dk/#/new-password?email='.$to.'&resethash='.$randompass.'">Nulstil kodeord</a>';
-        $reset_link_en = '<a href="https://test.castit.dk/#/new-password?email='.$to.'&resethash='.$randompass.'">Reset Password</a>';
+        $reset_link_dk = '<a href="https://castit.dk/new-password?email='.$to.'&resethash='.$randompass.'">Nulstil kodeord</a>';
+        $reset_link_en = '<a href="https://castit.dk/new-password?email='.$to.'&resethash='.$randompass.'">Reset Password</a>';
 
-        $content_sign_dk = '<p style="color: #646e78;text-align:left;font-size: 16px;padding:0 0 45px 0; margin:51px 0 0; 
+        // $reset_link_dk = '<a href="http://ang.castit:4000/new-password?email='.$to.'&resethash='.$randompass.'">Nulstil kodeord</a>';
+        // $reset_link_en = '<a href="http://ang.castit:4000/new-password?email='.$to.'&resethash='.$randompass.'">Reset Password</a>';
+
+        $content_sign_dk = '<p style="color: #646e78;text-align:left;font-size: 16px;padding:0 0 45px 0; margin:51px 0 0;
 								line-height:20px; text-align:left;font-family:Calibri"><br><br>Med venlig hilsen,<br>Castit</p>
-								<div style="float:left; width:100%; margin:40px 0 0 0; border-top:solid 1px #dddddd; 	
+								<div style="float:left; width:100%; margin:40px 0 0 0; border-top:solid 1px #dddddd;
 								padding:20px 0 0 0;">';
-					$content_sign_en = '<p style="color: #646e78;text-align:left;font-size: 16px;padding:0 0 45px 0; margin:51px 0 0; 
+					$content_sign_en = '<p style="color: #646e78;text-align:left;font-size: 16px;padding:0 0 45px 0; margin:51px 0 0;
 								line-height:20px; text-align:left;font-family:Calibri"><br><br>Yours sincerely,<br>Castit</p>
-								<div style="float:left; width:100%; margin:40px 0 0 0; border-top:solid 1px #dddddd; 	
+								<div style="float:left; width:100%; margin:40px 0 0 0; border-top:solid 1px #dddddd;
 								padding:20px 0 0 0;">';
 
-					$content .= $content_sal_dk.'<p style="color: #646e78;font-size: 16px;padding:0; line-height:18px; text-align:left; 
-					">Klik på linket og skift din adgangskode.<br/></p><p style="color: #646e78;font-size: 16px;padding:0; line-height:18px; text-align:left; 
+					$content .= $content_sal_dk.'<p style="color: #646e78;font-size: 16px;padding:0; line-height:18px; text-align:left;
+					">Klik på linket og skift din adgangskode.<br/></p><p style="color: #646e78;font-size: 16px;padding:0; line-height:18px; text-align:left;
 								">'.$reset_link_dk.'</p>'.$content_sign_dk.'<br>
 								'.$content_sal_en.'<p style="color: #646e78;font-size: 16px;padding:0; line-height:18px; text-align:left;" >
 								Click on the link and change your password '.$reset_link_en.'
 								</p>'.$content_sign_en;
-					
-					$content.= '</div></div></div></div></div></body></html>';	
+
+					$content.= '</div></div></div></div></div></body></html>';
         $user->save();
 				$headers = "MIME-Version: 1.0" . "\r\n";
 				$headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
@@ -339,8 +486,8 @@ class CastitRestAPIController extends ControllerBase {
         <div id="popup-wrapper"  style="float:left; width:100%; padding:54px 0 0 0;" >
            <div class="popup-container" style="margin: auto ; width: 730px ; padding: 0 15px ; max-width: 100%" >
                  <div class="popup-row1" style="border-bottom: solid 1px #2d2e32 ; float: left ; width: 730px; padding: 0 0 20px 0; margin: 0px 0 10px -5px;" >
-					   <div class="popup-logo" style="float:left; width:182px;" ><a href="#"><img style="max-width: 150px; margin-bottom: 15px;"  src="https://castit.dk/images/new_logo_black.png" alt="" /></a>
-					 	<a href="#" style="background-color: blue;border-radius: 20px;padding: 7px 17px;color: #FFF;text-decoration: none;font-family: helvetica;font-size: 13px;">Open Lightbox</a>  
+					   <div class="popup-logo" style="float:left; width:182px;" ><a href="javascript:void(0)"><img style="max-width: 150px; margin-bottom: 15px;"  src="https://castit.dk/images/new_logo_black.png" alt="" /></a>
+					 	<a href="https://castit.dk/lightbox-info/'. $postBody['groupID'] .'?sharedBy='.$postBody['emailInfo']['to'].'" style="background-color: blue;border-radius: 20px;padding: 7px 17px;color: #FFF;text-decoration: none;font-family: helvetica;font-size: 13px;">Open Lightbox</a>
 					   </div>
                        <div class="popup-text" style="display:block; padding:0 0 0 182px;">
                              <h4 style="padding:0;color:#000; font-size:16px; line-height:20px; font-weight:bold; font-family:Arial, Helvetica, sans-serif; margin:0 0 20px 0;" >Castit Lightbox: '.$postBody['groupName'].'</h4>
@@ -361,12 +508,12 @@ class CastitRestAPIController extends ControllerBase {
               </div>';
 			}
       $html .= '</div><!--popup-row2-->
-          
+
         <div class="popup-row3" style="float:left; width:100%; margin:60px 0 0 0 ;border-top:solid 1px #2d2e32; padding:30px 0;">
              <span class="popup-icon1" style="float:left"><img style="max-width:100%;"  src="https://castit.dk/images/group_icon.png" alt="" /></span>
              <h3 style="font-weight:bold; margin:0; padding:0; float:right; font-size:32px; color:#000;font-family: helvetica;" >'.date('d-m-Y').'</h3>
         </div><!--popup-row3-->
-        
+
    </div>
 </div>
 
@@ -374,7 +521,7 @@ class CastitRestAPIController extends ControllerBase {
 </html>';
 
   $subject = "Castit Lighbox : ". $postBody['groupName'];
-            
+
   $headers = "MIME-Version: 1.0" . "\r\n";
   $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
   $headers .= 'From: Castit <cat@castit.dk>' . "\r\n";
@@ -425,7 +572,7 @@ class CastitRestAPIController extends ControllerBase {
   }
 
   public function video_zencode($filename) {
-    
+
     $zencoder_input   	= "cf+uk://castit:187a515209d0affd473fedaedd6d770b@CASTITFILES/".$filename;
     $zencoder_output  	= "cf+uk://castit:187a515209d0affd473fedaedd6d770b@CASTITFILES/".$filename.".mp4";
     $zencoder_base_url  = "cf+uk://castit:187a515209d0affd473fedaedd6d770b@CASTITFILES";
@@ -523,9 +670,13 @@ class CastitRestAPIController extends ControllerBase {
         $user = User::load($data['uid']);
         if($user){
           $user->set('field_profile_status', $data['status']);
+          if($data['status'] == 4){
+            $user->set('mail', 'deleted-'.time().'-'.$user->getEmail());
+          }
           $user->save();
         }
         $response['message'] = 'success';
+        $response['data'] = $data;
       }
     }
     else{
@@ -533,7 +684,7 @@ class CastitRestAPIController extends ControllerBase {
     }
     return new JsonResponse( $response );
   }
-  
+
   public function set_profile_new_status( Request $request ) {
     if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
       $data = json_decode( $request->getContent(), TRUE );
@@ -552,7 +703,35 @@ class CastitRestAPIController extends ControllerBase {
     }
     return new JsonResponse( $response );
   }
-  
+
+  public function set_profile_type( Request $request ) {
+    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+      $data = json_decode( $request->getContent(), TRUE );
+      $response = array();
+      if (isset($data['uid']) && $data['uid'] != '') {
+        $user = User::load($data['uid']);
+        if($user && ($data['value']=='C' || $data['value']=='Y' || $data['value']=='B')){
+          $profileNumber = $user->field_profile_number->getValue();
+          $new_profileNumber = substr_replace($profileNumber[0]['value'], $data['value'], 0, 1);
+          $user->set('field_profile_type', $data['value']);
+          $user->set('field_profile_number', $new_profileNumber);
+          if($data['value']=='B'){
+            $user->set('field_profile_status', 5); // 5 => Bureau
+          }
+          $user->save();
+          $response['message'] = 'success';
+          $response['field_profile_type'] = $user->field_profile_type->getValue()[0]['value'];
+          $response['field_profile_number'] = $user->field_profile_number->getValue()[0]['value'];
+        }
+
+      }
+    }
+    else{
+      $response['error'] = 'supply json';
+    }
+    return new JsonResponse( $response );
+  }
+
   public function set_media_status( Request $request ) {
     if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
       $data = json_decode( $request->getContent(), TRUE );
@@ -561,7 +740,7 @@ class CastitRestAPIController extends ControllerBase {
         // exit;
         if($user){
           if (isset($data['type']) && isset($data['index']) && isset($data['status'])) {
-            switch($data['type'] == 'photo'){
+            switch($data['type']){
               case 'photo':
                 $current_media_info = $user->field_photos->getValue();
                 $current_media_info[$data['index']]['title'] = $data['status'];
@@ -570,7 +749,9 @@ class CastitRestAPIController extends ControllerBase {
                 break;
               case 'video':
                 $current_media_info = $user->field_videos->getValue();
+                // pp($current_media_info);
                 $current_media_info[$data['index']]['title'] = $data['status'];
+                // ppe($current_media_info);
                 $user->set("field_videos", $current_media_info);
                 $user->save();
                 break;
@@ -580,7 +761,7 @@ class CastitRestAPIController extends ControllerBase {
           }
         }
         $response['message'] = 'success';
-        $response['info'] = 'menia status updated';
+        $response['info'] = 'media status updated';
       }
     }
     else{
@@ -588,13 +769,13 @@ class CastitRestAPIController extends ControllerBase {
     }
     return new JsonResponse( $response );
   }
- 
+
   public function update_profileNumber( User $user, $data) {
     $profileNumber = $data['field_profile_number_export'];
     if($profileNumber == '') {
       $profileNumber = 'Y';
       $profileNumber .= ($data['field_gender_export'] == '1') ? 'M' : 'F';
-      $profileNumber .= str_pad($user->id(), 4, "0", STR_PAD_LEFT); 
+      $profileNumber .= str_pad($user->id(), 4, "0", STR_PAD_LEFT);
     }
     $user->set('field_profile_number', $profileNumber);
     $user->save();
@@ -602,10 +783,45 @@ class CastitRestAPIController extends ControllerBase {
   }
 
   public function update_model_fields( User $user , $data) {
+    if(!$data['field_height_export']){
+      $data['field_height_export'] = $data['field_height'];
+    }
+    if(!$data['field_weight_export']){
+      $data['field_weight_export'] = $data['field_weight'];
+    }
+    if (!is_numeric($data['field_eye_color_export'])) {
+      if (in_array($data['field_eye_color_export'], $this->eye_colors_DK)) {
+        $data['field_eye_color_export'] = array_search($data['field_eye_color_export'], $this->eye_colors_DK);
+      }
+      if (in_array($data['field_eye_color_export'], $this->eye_colors_EN)) {
+        $data['field_eye_color_export'] = array_search($data['field_eye_color_export'], $this->eye_colors_EN);
+      }
+    }
+
+    if (!is_numeric($data['field_hair_color_export'])) {
+      if (in_array($data['field_hair_color_export'], $this->hair_colors_DK)) {
+        $data['field_hair_color_export'] = array_search($data['field_hair_color_export'], $this->hair_colors_DK);
+      }
+      if (in_array($data['field_hair_color_export'], $this->hair_colors_EN)) {
+        $data['field_hair_color_export'] = array_search($data['field_hair_color_export'], $this->hair_colors_EN);
+      }
+    }
+
+    if (!$data['field_profile_status_export']) {
+      $data['field_profile_status_export'] = 3;
+    }
+
+    if (!$data['field_profile_type_export']) {
+      $data['field_profile_type_export'] = 'Y';
+    }
+
+
+    // $data['field_hair_color_export']
+
     $user->set('field_about_me', $data['field_about_me_export']);
     $user->set('field_address', $data['field_address_export']);
     $user->set('field_agreed_to_terms', $data['field_agreed_to_terms_export']);
-    // $user->set('field_birthday', $data['']);
+    $user->set('field_birthday', $data['field_birthday_export']);
     $user->set('field_bra_size', $data['field_bra_size_export']);
     $user->set('field_bureau', $data['field_bureau_export']);
     $user->set('field_category', $data['field_category_export']);
@@ -665,6 +881,10 @@ class CastitRestAPIController extends ControllerBase {
   public function update_customer_fields( User $user , $data) {
     $user->set('field_organization', $data['field_organization_export']);
     $user->set('field_telephone', $data['field_telephone_export']);
+    // echo new JsonResponse( $user );
+    // echo new JsonResponse( $data );
+    // return new JsonResponse( $data );
+    // exit;
     return $user;
   }
 
@@ -689,7 +909,7 @@ class CastitRestAPIController extends ControllerBase {
         $response['uid'] = $user->id();
         $response['profile_number'] = $user->field_profile_number->getValue();
       }
-      else{
+      else {
         $user = User::create([
           'name'=> $data['name_export'],
           'mail'=> $data['name_export'],
@@ -700,28 +920,98 @@ class CastitRestAPIController extends ControllerBase {
           case '':
           default:
             $user = $this->update_model_fields($user, $data);
+            // $user->set('field_profile_status', '3');
+            $this->update_profileNumber($user, $data);
             $user->addRole('model');
             break;
           case 'customer':
             $user = $this->update_customer_fields($user, $data);
+            // exit;
             $user->addRole('customer');
         }
         $user->activate();
-        $user->set('field_profile_status', 3);
+        // if($data['roleType'] == 'model') {
+        //   $user->set('field_profile_status', '3');
+        // }
         $user->save();
         $userObj = $user;
-        $this->update_profileNumber($user, $data);
+        if($data['roleType'] == 'model') {
+          $this->update_profileNumber($user, $data);
+        }
+
         $response['message'] = 'create success';
         $response['uid'] = $user->id();
         $pn = $user->field_profile_number->getValue();
         if(count($pn) > 0){
           $response['profile_number'] = $pn[0]['value'];
         }
-        $this->send_welcome_email($userObj);
+
+        if($data['roleType'] == 'model') {
+          $this->send_welcome_email($userObj);
+        }
+        if($data['roleType'] == 'customer') {
+          $this->send_welcome_email_customer($userObj);
+        }
+
         unset($userObj);
       }
     }
     else{
+      $response['error'] = 'supply json';
+    }
+    return new JsonResponse( $response );
+  }
+
+  public function enquire_workshop( Request $request ) {
+    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+      $data = json_decode( $request->getContent(), TRUE );
+      $data = $data['data'];
+      // $request->request->replace( is_array( $data ) ? $data : [] );
+      // print_r($data);exit;
+      $to_email = $data['to'];
+      $to_email = 'padmanabhanncastit@mailinator.com';
+      $from_email = $data['from'];
+      $from_name = $data['fromName'];
+      $mail_body = $data['comment'];
+      $to_cc = $data['cc'];
+      $html = '<table style="text-align:left" cellspacing="0" cellpadding="0" width="556" border="0">
+        <tbody>
+        <tr>
+        <td>
+        <table style="width:100%" border="0">
+        <tbody>
+        <tr>
+        <td align="left"><img alt="Mailtoplogo" src="https://castit.dk/assets/mailTopLogo.png" ></td>
+        <td style="width:270px;padding-top:18px" align="left" valign="top"><b style="color:#696969">Castit <span class="il">Workshop</span>:</b><br>'.$mail_body.'</td>
+        </tr>
+        <tr>
+        <td colspan="2"></td>
+        </tr>
+        </tbody>
+        </table>
+        </td>
+        </tr>
+        <tr>';
+
+      $subject = "Castit Workshop enquiry";
+
+      $mgClient = new Mailgun('key-ebe8829c00330a3be43c59dd67da5b73');
+      $domain = "mail.castit.dk";
+
+      $email_data = array();
+      $email_data['from'] = $from_name. ' via Castit.dk <' . $from_email . '>';
+      $email_data['to']		=	$to_email;
+      $email_data['subject']		=	$subject;
+      $email_data['html']		=	$html;
+      if(isset($to_cc) && $to_cc != '') {$email_data['cc']		=	$to_cc;}
+      $email_data['bcc']		=	'padmanabhann@mailinator.com, cat@castit.dk';
+
+
+      $result = $mgClient->sendMessage($domain, $email_data);
+      $response['success'] = true;
+      $response['message'] = 'Email er sendt!';
+    }
+    else {
       $response['error'] = 'supply json';
     }
     return new JsonResponse( $response );
@@ -733,7 +1023,7 @@ class CastitRestAPIController extends ControllerBase {
     $first_name = $first_name[0]['value'];
     $from = 'cat@castit.dk';
     $subject  = "Tak for din ansøgning!  /  Thank you for your application!";
-  
+
     $headers = "MIME-Version: 1.0" . "\r\n";
     $headers .= "Content-type:text/html;charset=UTF-8" . "\r\n";
     $headers .= 'From: Castit <cat@castit.dk>' . "\r\n";
@@ -801,17 +1091,274 @@ EOM;
     $mgClient = new Mailgun('key-ebe8829c00330a3be43c59dd67da5b73');
     $domain = "mail.castit.dk";
     $result = $mgClient->sendMessage(
-      $domain, 
+      $domain,
       [
       'from'    => 'CASTIT <info@castit.dk>',
       'to'      => $to_email,
       'subject' => $subject,
       'html'    => $html_body,
-      // 'bcc'	=> 'padmanabhann@mailinator.com, cat@castit.dk'
+      'bcc'	=> 'padmanabhann@mailinator.com, cat@castit.dk'
       ]);
       // $response['success'] = TRUE;
     $response['message'] = 'Email er sendt!';
     $response['email'] = $to_email;
     return $response;
+  }
+
+  public function send_welcome_email_customer($user){
+    $to_email = $user->getEmail();
+    $subject  = "Tak for din oprettelse!  /  Thank you for signing up!";
+    $html_body = <<< EOM
+    <p>Kære Kunde,</p>
+    <p>
+    Tak for din oprettelse. Du kan nu benytte Lightbox på <a href="https://castit.dk">Castit.dk</a>
+    </p>
+    <p>
+    Kontakt os endelig hvis du har spørgsmål eller brug for hjælp.
+    </p>
+    <p>
+    Mange hilsner
+    </p>
+    <p>Cathrine Hovmand</p>
+    <p># 0045 2128 5825</p>
+    <p>E: cat@castit.dk</p>
+    <br/>
+    <img style="max-width: 150px;" src="https://castit.dk/images/new_logo_black.png" alt="" />
+    <p>Rosenvængets Allè 11, 1. Sal</p>
+    <p>2100 København Ø</p>
+    <a href="https://castit.dk">Castit.dk</a>
+    <br/>
+    ------------------------------------------------------------------
+    <br/>
+
+    <p>Dear Customer,</p>
+    <p>
+    Thank you for signing up. You can now use the Lightbox on <a href="https://castit.dk">Castit.dk</a>
+    </p>
+    <p>
+    Don't hesitate to contact us if you have any questions
+    </p>
+    <p>
+    Very best
+    </p>
+    <p>Cathrine Hovmand</p>
+    <p># 0045 2128 5825</p>
+    <p>E: cat@castit.dk</p>
+    <br/>
+    <img style="max-width: 150px;" src="https://castit.dk/images/new_logo_black.png" alt="" />
+    <p>Rosenvængets Allè 11, 1st floor</p>
+    <p>2100 Copenhagen Ø</p>
+    <a href="https://castit.dk">Castit.dk</a>
+
+EOM;
+      $mgClient = new Mailgun('key-ebe8829c00330a3be43c59dd67da5b73');
+      $domain = "mail.castit.dk";
+      $result = $mgClient->sendMessage(
+        $domain,
+        [
+          'from'    => 'CASTIT <info@castit.dk>',
+          'to'      => $to_email,
+          'subject' => $subject,
+          'html'    => $html_body,
+          'bcc'	=> 'padmanabhann@mailinator.com',
+        ]);
+      $response['message'] = 'Email er sendt!';
+      $response['email'] = $to_email;
+      return $response;
+    }
+
+  public function send_activation_email( Request $request ) {
+    $response['message'] = '';
+    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+      $data = json_decode( $request->getContent(), TRUE );
+      // var_dump($data);
+      if ($data['uid']) {
+        $user = User::load($data['uid']);
+        if ($user) {
+          $first_name = trim(ucwords($user->field_first_name->getValue()[0]['value']));
+          $to_email = $user->getEmail();
+          // var_dump($first_name);
+          // var_dump($to_email);
+          // exit;
+          $subject = "Svar fra Castit! / Response from Castit! ";
+          $html_body = <<< EOM
+          <p>Kære $first_name,</p>
+
+          <p>Mange tak for din ansøgning som profil hos Castit.
+          Vi sætter stor pris på din interesse.</p>
+
+          <p>Vi er glade for at kunne fortælle dig at din profil nu er lagt online, og vi håber at du fortsat vil opdatere den med nye billeder og informationer i fremtiden.</p>
+
+          <p>Desværre kan vi ikke garantere dig jobs, men vi vil kontakte dig såfremt vi får noget spændende ind som kunne passe til dig.</p>
+
+          <p>BEMÆRK: Hvis du ligger hos andre bureauer  vil vi meget gerne vide det.</p>
+
+          <p>Hvis du er interesseret så afholder vi workshops for vores profiler i samarbejde med Tony Grahn. Vi har stor succes med at uddanne vores profiler, så de har nemmere ved at få jobs og som en ekstra gevinst får de en masse personligt ud af det også. Kig på vores hjemmeside under ”Workshops” for mere information.</p>
+
+          <p>Vi glæder os til forhåbentligt snart, at tale med dig.</p>
+
+          <p>De bedste hilsner</p>
+
+          <p>Cathrine & Pernille</p>
+          <p></p>
+          <br/>
+          <img style="max-width: 150px;" src="https://castit.dk/images/new_logo_black.png" alt="" />
+          <p>Rosenvængets Allè 11, 1. Sal</p>
+          <p>2100 København Ø</p>
+
+
+          <p>Cathrine Hovmand</p>
+          <p># 0045 2128 5825</p>
+          <p>E: cat@castit.dk</p>
+
+          <p>Pernille Marco: </p>
+          <p># 0045 3135 3579</p>
+          <p>E: pernille@castit.dk</p>
+
+          <a href="https://castit.dk">Castit.dk</a>
+          <br/>
+          -------------------------------------------------------------------------------------------------------
+
+
+          <p>Dear $first_name</p>
+          <br/>Thank you for your application as a profile at Castit. We appreciate your interest.</p>
+          <p>We are happy to tell you that your profile is now online and we hope that you will continue to update it with new pictures and information in the future.</p>
+          <p>Unfortunately, we cannot guarantee you jobs, but we will contact you if we get something interesting that fits you.</p>
+          <br/>
+          <p>PLEASE NOTE: If you are working with other agencies, we would like to know.</p>
+          <br/>
+          <p>If you are interested!</p>
+          <p>We organize workshops for our profiles together with Tony Grahn. We have great success in educating our profiles. That makes it easier to access jobs and our profiles get a lot of personal gains as well. Look at our website under "Workshops" or contact us directly.</p>
+          <br/><br/>
+
+          <p>We are looking forward to hopefully talk to you soon.</p>
+          <br/>
+          <p>Very best</p>
+          <br/>
+          <p>Cathrine & Pernille</p>
+          <p></p>
+          <br/>
+          <img style="max-width: 150px;"  src="https://castit.dk/images/new_logo_black.png" alt="" />
+          <p>Rosenvængets Allè 11, 1st floor</p>
+          <p>2100 Copenhagen East</p>
+          <br/>
+          <p>Cathrine Hovmand</p>
+          <p># 0045 2128 5825</p>
+          <p>E: cat@castit.dk</p>
+          <br/>
+          <p>Pernille Marco:</p>
+          <p># 0045 3135 3579</p>
+          <p>E: pernille@castit.dk</p>
+          <br/>
+          <a href="https://castit.dk">Castit.dk</a>
+EOM;
+          // $to_email = 'padmanabhann1@mailinator.com';
+          $mgClient = new Mailgun('key-ebe8829c00330a3be43c59dd67da5b73');
+          $domain = "mail.castit.dk";
+          $result = $mgClient->sendMessage(
+            $domain,
+            [
+              'from'    => 'CASTIT <info@castit.dk>',
+              'to'      => $to_email,
+              'subject' => $subject,
+              'html'    => $html_body,
+              'bcc'	=> 'padmanabhann@mailinator.com',
+            ]);
+          $response['message'] = 'Email er sendt!';
+          $response['email'] = $to_email;
+        }
+      }
+    }
+    return new JsonResponse( $response );
+  }
+
+  public function send_deactivation_email( Request $request ) {
+    $response['message'] = '';
+    if ( 0 === strpos( $request->headers->get( 'Content-Type' ), 'application/json' ) ) {
+      $data = json_decode( $request->getContent(), TRUE );
+      // var_dump($data);
+      if ($data['uid']) {
+        $user = User::load($data['uid']);
+        if ($user) {
+          $first_name = trim(ucwords($user->field_first_name->getValue()[0]['value']));
+          $to_email = $user->getEmail();
+          // var_dump($first_name);
+          // var_dump($to_email);
+          // exit;
+          $subject = "Svar fra Castit! / Response from Castit! ";
+          $html_body = <<< EOM
+          <p>Kære $first_name</p>
+          <p>Mange tak for din ansøgning som profil hos Castit. Vi sætter stor pris på din interesse.</p>
+
+          <p>Vi kan dog desværre ikke tilbyde dig en Online profil – men vi gemmer din ansøgning og vi vil selvfølgelig foreslå dig til relevante jobs.</p>
+
+          <p>Vi ønsker dig held og lykke fremover.</p>
+
+          <p>De bedste hilsner</p>
+
+          <p>Cathrine & Pernille</p>
+          <p></p>
+          <br/>
+          <img style="max-width: 150px;" src="https://castit.dk/images/new_logo_black.png" alt="" />
+          <p>Rosenvængets Allè 11, 1. Sal</p>
+          <p>2100 København Ø</p>
+
+
+          <p>Cathrine Hovmand</p>
+          <p># 0045 2128 5825</p>
+          <p>E: cat@castit.dk</p>
+
+          <p>Pernille Marco: </p>
+          <p># 0045 3135 3579</p>
+          <p>E: pernille@castit.dk</p>
+
+          <p><a href="https://castit.dk">castit.dk</a></p>
+
+          -------------------------------------------------------------------------------------------------------
+
+
+          <p>Dear $first_name</p>
+          <p>Thank you for your application as a profile at Castit. We appreciate your interest.</p>
+          <p>Unfortunately, we cannot offer you an online profile - but we saved your application and we will of course suggest you for relevant jobs.</p>
+
+          <p>We wish you all the best.</p>
+
+          <p>Very best</p>
+
+          <p>Cathrine & Pernille</p>
+          <p></p>
+          <br/>
+          <img style="max-width: 150px;" src="https://castit.dk/images/new_logo_black.png" alt="" />
+          <p>Rosenvængets Allè 11, 1st floor</p>
+          <p>2100 Copenhagen Ø</p>
+
+          <p>Cathrine Hovmand</p>
+          <p># 0045 2128 5825</p>
+          <p>E: cat@castit.dk</p>
+
+          <p>Pernille Marco:</p>
+          <p># 0045 3135 3579</p>
+          <p>E: pernille@castit.dk</p>
+
+          <p><a href="https://castit.dk">www.castit.dk</a></p>
+EOM;
+          // $to_email = 'padmanabhann1@mailinator.com';
+          $mgClient = new Mailgun('key-ebe8829c00330a3be43c59dd67da5b73');
+          $domain = "mail.castit.dk";
+          $result = $mgClient->sendMessage(
+            $domain,
+            [
+              'from'    => 'CASTIT <info@castit.dk>',
+              'to'      => $to_email,
+              'subject' => $subject,
+              'html'    => $html_body,
+              'bcc'	=> 'padmanabhann@mailinator.com',
+            ]);
+          $response['message'] = 'Email er sendt!';
+          $response['email'] = $to_email;
+        }
+      }
+    }
+    return new JsonResponse( $response );
   }
 }
